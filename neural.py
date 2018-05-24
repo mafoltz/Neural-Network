@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import random
 
 
 class NeuralNetwork(object):
@@ -31,14 +32,22 @@ class NeuralNetwork(object):
         if not configuration:
             configuration = [width] * depth
 
+        self.numLayers = len(configuration)
+
         self.activations = np.array([[1] + [0] * depth for depth in configuration])
 
         matrixes = []
         for n1, n2 in zip(configuration, configuration[1:]):
-            line = [0] * (n1 + 1)
-            matrix = [line] * n2
-            matrixes.append(matrix)
+            layer = [[random.random() for i in range(n1 + 1)] for i in range(n2)]
+            matrixes.append(layer)
         self.weights = np.array(matrixes)
+
+    def propagate(self):
+        newActivations = [self.activations[0]]
+        for layer in range(0, self.numLayers-1):
+            newActivations.append([1] + self.weights[layer] @ self.activations[layer])
+        self.activations = np.array(newActivations)
+        return self.activations[self.numLayers-1]
 
     def train(self, instances, className, attributes=None):
         pass
