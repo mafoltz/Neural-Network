@@ -2,6 +2,7 @@
 
 import numpy as np
 import random
+from math import exp
 
 
 class NeuralNetwork(object):
@@ -42,10 +43,14 @@ class NeuralNetwork(object):
             matrixes.append(layer)
         self.weights = np.array(matrixes)
 
+    def sigmoide(self, value):
+        return 1 / 1 + exp(-value)
+
     def propagate(self):
         newActivations = [self.activations[0]]
         for layer in range(0, self.numLayers-1):
-            newActivations.append([1] + self.weights[layer] @ self.activations[layer])
+            layerValues = self.weights[layer] @ self.activations[layer]
+            newActivations.append([1] + [self.sigmoide(a) for a in layerValues])
         self.activations = np.array(newActivations)
         return self.activations[self.numLayers-1]
 
