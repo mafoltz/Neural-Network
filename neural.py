@@ -35,7 +35,12 @@ class NeuralNetwork(object):
 
         self.numLayers = len(configuration)
 
-        self.activations = np.array([[1] + [0] * depth for depth in configuration])
+        activations = []
+        for width in configuration[:-1]:
+            activations.append(np.array([1] + [0] * width))
+        activations.append(np.array([0] * configuration[self.numLayers-1]))
+
+        self.activations = np.array(activations)
 
         matrixes = []
         for n1, n2 in zip(configuration, configuration[1:]):
@@ -46,13 +51,31 @@ class NeuralNetwork(object):
     def sigmoide(self, value):
         return 1 / 1 + exp(-value)
 
-    def propagate(self):
-        newActivations = [self.activations[0]]
+    def propagate(self, inputs):
+        newActivations = [np.array(inputs)]
         for layer in range(0, self.numLayers-1):
-            layerValues = self.weights[layer] @ self.activations[layer]
-            newActivations.append([1] + [self.sigmoide(a) for a in layerValues])
+            layerValues = self.weights[layer] @ newActivations[layer]
+            newActivations.append(np.array([1] + [self.sigmoide(a) for a in layerValues]))
         self.activations = np.array(newActivations)
         return self.activations[self.numLayers-1]
+
+    def backpropagate(self, outputs, expecteds):
+        deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)])]
+        for layer in range(self.numLayers-2, -1, -1):
+            delta = self.weights[layer].transpose() @ deltas[layer-(self.numLayers-2)]
+            a = self.activations[layer]
+            delta = np.multiply(delta.transpose(), a)
+            delta = np.multiply(delta, (1 - a))
+            delta = delta.transpose()
+            deltas.append(np.array(delta[1:]))
+        deltas = np.array(deltas)
+        deltas = deltas[::-1]
+
+        newWeights = []
+        for layer in range(self.numLayers-2):
+            layerWeights = self.weights[layer] + deltas[layer+1] @ self.activations[layer].transpose()
+            newWeights.append(np.array(layerWeights))
+        return newWeights
 
     def train(self, instances, className, attributes=None):
         pass
