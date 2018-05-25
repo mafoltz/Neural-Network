@@ -29,6 +29,8 @@ class NeuralNetwork(object):
     onde o tamanho da lista é usado como 'depth', e cada camada tem sua
     'width' específica."""
     def __init__(self, depth, width, configuration=None):
+        self.regulation = 100
+        self.alpha = 0.1
 
         if not configuration:
             configuration = [width] * depth
@@ -59,7 +61,7 @@ class NeuralNetwork(object):
         self.activations = np.array(newActivations)
         return self.activations[self.numLayers-1]
 
-    def backpropagate(self, outputs, expecteds):
+    def backpropagate(self, outputs, expecteds, numExamples):
         deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)])]
         for layer in range(self.numLayers-2, -1, -1):
             delta = self.weights[layer].transpose() @ deltas[layer-(self.numLayers-2)]
@@ -71,10 +73,22 @@ class NeuralNetwork(object):
         deltas = np.array(deltas)
         deltas = deltas[::-1]
 
+        gradients = []
+        for layer in range(self.numLayers-2):
+            layerWeights = self.weights[layer] + deltas[layer+1].transpose() @ self.activations[layer][1:]
+
+            p = self.regulation * np.array(self.weights[layer])
+            for i in range(len(p)):
+                p[i][0] = 0
+
+            layerWeights = (np.array(layerWeights) + p) / numExamples
+
+            gradients.append(np.array(layerWeights))
+
         newWeights = []
         for layer in range(self.numLayers-2):
-            layerWeights = self.weights[layer] + deltas[layer+1] @ self.activations[layer].transpose()
-            newWeights.append(np.array(layerWeights))
+            layerValue = self.weights[layer] - self.alpha * gradients[layer]
+            newWeights.append(layerValue)
         return newWeights
 
     def train(self, instances, className, attributes=None):
@@ -82,3 +96,8 @@ class NeuralNetwork(object):
 
     def evaluate(self, test):
         pass
+
+
+if __name__ == '__main__':
+    t = NeuralNetwork(3, 4)
+    print(t.backpropagate([0, 0, 0, 0], [1, 1, 1, 1], 1))
