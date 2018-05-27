@@ -72,7 +72,7 @@ class NeuralNetwork(object):
 
     def backpropagate(self, outputs, expecteds):
         deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)])]
-        print('delta saida:', deltas[0])
+        print('\ndelta saida:', deltas[0])
         for layer in range(self.numLayers-2, 0, -1):
             delta = np.array([self.weights[layer]]).transpose() @ deltas[layer-(self.numLayers-2)]
             a = self.activations[layer]
@@ -87,7 +87,7 @@ class NeuralNetwork(object):
         for layer in range(self.numLayers-1):
             gradientDelta = deltas[layer] * np.array([self.activations[layer]]).transpose()
             print('gradient delta {}: {}'.format(layer, gradientDelta.transpose()))
-            gradients.append(np.array(gradientDelta))
+            gradients.append(gradientDelta.transpose())
         return gradients
 
     def error(self, outputs, expectedOutputs):
@@ -104,17 +104,20 @@ class NeuralNetwork(object):
         print(outputs)
         print(inputs)
 
-        gradients = []
+        gradients = None
         error = 0
         for i, (input, output) in enumerate(zip(inputs, outputs)):
-            print('Processando exemplo {}'.format(i))
+            print('\nProcessando exemplo {}'.format(i))
             predictedOutput = self.propagate(input)
-            print('Saída predita: {}'.format(predictedOutput))
+            print('\nSaída predita: {}'.format(predictedOutput))
             print('Saída esperada: {}'.format(output))
             error += self.error(predictedOutput, output)
             print('Erro:', error)
             gradientDelta = self.backpropagate(predictedOutput, output)
-            # gradients = gradients + gradientDelta
+            if not gradients:
+                gradients = gradientDelta
+            else:
+                gradients = np.add(gradients, gradientDelta)
 
         squared = self.weights ** 2
         weightSum = 0
@@ -125,17 +128,23 @@ class NeuralNetwork(object):
 
         error = error / len(instances) + regulated
 
-        print('Accumulated error:', error)
+        print('\nAccumulated error:', error)
 
+        regulatedGradients = []
         for layer in range(self.numLayers-1):
             p = self.regulation * np.array(self.weights[layer])
             for i in range(len(p)):
                 p[i][0] = 0
 
-            layerGradient = (gradients + p) / len(instances)
+            layerGradient = np.add(gradients[layer], p) / len(instances)
             print('gradient for layer {}: {}'.format(layer, layerGradient))
+            regulatedGradients.append(layerGradient)
 
-            layerValue = self.weights[layer] - self.alpha * layerGradient
+        print()
+        for layer in range(self.numLayers-1):
+            layerValue = self.weights[layer] - self.alpha * regulatedGradients[layer]
+            print('old weight for layer {}: {}'.format(layer, self.weights[layer]))
+            print('new weight for layer {}: {}'.format(layer, layerValue))
             self.weights[layer] = layerValue
 
     def evaluate(self, test):
