@@ -4,6 +4,13 @@ import numpy as np
 import random
 from math import exp, log
 
+DEBUG = True
+
+
+def printD(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)
+
 
 class NeuralNetwork(object):
 
@@ -55,24 +62,24 @@ class NeuralNetwork(object):
 
     def propagate(self, inputs):
         newActivations = [np.array([1] + inputs)]
-        print('input:', [1] + inputs)
+        printD('input:', [1] + inputs)
         for layer in range(0, self.numLayers-1):
             layerValues = self.weights[layer] @ newActivations[layer]
-            print('enter {}: {}'.format(layer+1, layerValues))
+            printD('enter {}: {}'.format(layer+1, layerValues))
 
             if layer == self.numLayers-2:
                 bias = []
             else:
                 bias = [1]
             layerAct = np.array(bias + [self.sigmoide(a) for a in layerValues])
-            print('layer {}: {}'.format(layer+1, layerAct))
+            printD('layer {}: {}'.format(layer+1, layerAct))
             newActivations.append(layerAct)
         self.activations = np.array(newActivations)
         return self.activations[self.numLayers-1]
 
     def backpropagate(self, outputs, expecteds):
         deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)]).transpose()]
-        print('\ndelta saida:', deltas[0])
+        printD('\ndelta saida:', deltas[0])
         for layer in range(self.numLayers-2, 0, -1):
             delta = np.multiply(self.weights[layer].transpose(), deltas[layer-(self.numLayers-2)])
             delta = [sum(line) for line in delta]
@@ -81,7 +88,7 @@ class NeuralNetwork(object):
             delta = np.multiply(delta, a)
             delta = np.multiply(delta, (1 - a))
             delta = np.array(delta[1:])
-            print('delta {}: {}'.format(layer, delta))
+            printD('delta {}: {}'.format(layer, delta))
             deltas.append(delta)
         # deltas = np.array(deltas)
         deltas = deltas[::-1]
@@ -89,7 +96,7 @@ class NeuralNetwork(object):
         gradients = []
         for layer in range(self.numLayers-1):
             gradientDelta = deltas[layer] * np.array([self.activations[layer]]).transpose()
-            print('gradient delta {}: {}'.format(layer, gradientDelta.transpose()))
+            printD('gradient delta {}: {}'.format(layer, gradientDelta.transpose()))
             gradients.append(gradientDelta.transpose())
         return gradients
 
@@ -113,18 +120,15 @@ class NeuralNetwork(object):
                 attr = attr[0]
             inputs.append(attr)
 
-        print(outputs)
-        print(inputs)
-
         gradients = None
         error = 0
         for i, (input, output) in enumerate(zip(inputs, outputs)):
-            print('\nProcessando exemplo {}'.format(i))
+            printD('\nProcessando exemplo {}'.format(i))
             predictedOutput = self.propagate(input)
-            print('\nSaída predita: {}'.format(predictedOutput))
-            print('Saída esperada: {}'.format(output))
+            printD('\nSaída predita: {}'.format(predictedOutput))
+            printD('Saída esperada: {}'.format(output))
             error += self.error(predictedOutput, output)
-            print('Erro:', error)
+            printD('Erro:', error)
             gradientDelta = self.backpropagate(predictedOutput, output)
             if not gradients:
                 gradients = gradientDelta
@@ -140,7 +144,7 @@ class NeuralNetwork(object):
 
         error = error / len(instances) + regulated
 
-        print('\nAccumulated error:', error)
+        printD('\nAccumulated error:', error)
 
         regulatedGradients = []
         for layer in range(self.numLayers-1):
@@ -149,14 +153,14 @@ class NeuralNetwork(object):
                 p[i][0] = 0
 
             layerGradient = np.add(gradients[layer], p) / len(instances)
-            print('gradient for layer {}: {}'.format(layer, layerGradient))
+            printD('gradient for layer {}: {}'.format(layer, layerGradient))
             regulatedGradients.append(layerGradient)
 
-        print()
+        printD()
         for layer in range(self.numLayers-1):
             layerValue = self.weights[layer] - self.alpha * regulatedGradients[layer]
-            print('old weight for layer {}: {}'.format(layer, self.weights[layer]))
-            print('new weight for layer {}: {}'.format(layer, layerValue))
+            printD('old weight for layer {}: {}'.format(layer, self.weights[layer]))
+            printD('new weight for layer {}: {}'.format(layer, layerValue))
             self.weights[layer] = layerValue
 
     def evaluate(self, test):
@@ -166,7 +170,6 @@ class NeuralNetwork(object):
 def example1():
     t = NeuralNetwork(0, 0, [1, 2, 1])
 
-    # print(t.activations)
     t.weights[0] = np.array([[0.4, 0.1], [0.3, 0.2]])
     t.weights[1] = np.array([[0.7, 0.5, 0.6]])
 
@@ -179,7 +182,6 @@ def example1():
 def example2():
     t = NeuralNetwork(0, 0, [2, 4, 3, 2], regulation=0.25)
 
-    # print(t.activations)
     t.weights[0] = np.array([[0.42, 0.15, 0.40],
                              [0.72, 0.10, 0.54],
                              [0.01, 0.19, 0.42],
