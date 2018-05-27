@@ -78,15 +78,15 @@ class NeuralNetwork(object):
             a = self.activations[layer]
             delta = np.multiply(delta.transpose(), a)
             delta = np.multiply(delta, (1 - a))
-            print('delta {}: {}'.format(layer, [delta[0][1:]]))
-            deltas.append(np.array([delta[0][1:]]))
+            print('delta {}: {}'.format(layer, [row[1:] for row in delta[0]]))
+            deltas.append(np.array([row[1:] for row in delta[0]]))
         # deltas = np.array(deltas)
         deltas = deltas[::-1]
 
         gradients = []
-        for layer in range(self.numLayers-2):
-            gradientDelta = deltas[layer+1].transpose() @ self.activations[layer][1:]
-            print('gradient delta {}: {}'.format(layer, gradientDelta))
+        for layer in range(self.numLayers-1):
+            gradientDelta = deltas[layer] * np.array([self.activations[layer]]).transpose()
+            print('gradient delta {}: {}'.format(layer, gradientDelta.transpose()))
             gradients.append(np.array(gradientDelta))
         return gradients
 
@@ -113,7 +113,7 @@ class NeuralNetwork(object):
             print('Saída esperada: {}'.format(output))
             error += self.error(predictedOutput, output)
             print('Erro:', error)
-            # gradientDelta = self.backpropagate(predictedOutput, output)
+            gradientDelta = self.backpropagate(predictedOutput, output)
             # gradients = gradients + gradientDelta
 
         squared = self.weights ** 2
