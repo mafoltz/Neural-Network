@@ -28,8 +28,8 @@ class NeuralNetwork(object):
     Caso 'configuration' seja especificado, este deve ser uma lista de inteiros,
     onde o tamanho da lista é usado como 'depth', e cada camada tem sua
     'width' específica."""
-    def __init__(self, depth, width, configuration=None):
-        self.regulation = 0
+    def __init__(self, depth, width, configuration=None, regulation=0):
+        self.regulation = regulation
         self.alpha = 0.1
 
         if not configuration:
@@ -71,15 +71,18 @@ class NeuralNetwork(object):
         return self.activations[self.numLayers-1]
 
     def backpropagate(self, outputs, expecteds):
-        deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)])]
+        deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)]).transpose()]
         print('\ndelta saida:', deltas[0])
         for layer in range(self.numLayers-2, 0, -1):
-            delta = np.array([self.weights[layer]]).transpose() @ deltas[layer-(self.numLayers-2)]
+            delta = np.multiply(self.weights[layer].transpose(), deltas[layer-(self.numLayers-2)])
+            delta = [sum(line) for line in delta]
+
             a = self.activations[layer]
-            delta = np.multiply(delta.transpose(), a)
+            delta = np.multiply(delta, a)
             delta = np.multiply(delta, (1 - a))
-            print('delta {}: {}'.format(layer, [row[1:] for row in delta[0]]))
-            deltas.append(np.array([row[1:] for row in delta[0]]))
+            delta = np.array(delta[1:])
+            print('delta {}: {}'.format(layer, delta))
+            deltas.append(delta)
         # deltas = np.array(deltas)
         deltas = deltas[::-1]
 
@@ -98,8 +101,17 @@ class NeuralNetwork(object):
             attributes = list(instances[0].keys())
             attributes.remove(className)
 
-        outputs = [[instance[className]] for instance in instances]
-        inputs = [[v for k, v in instance.items() if k in attributes] for instance in instances]
+        outputs = []
+        inputs = []
+        for instance in instances:
+            output = instance[className]
+            if not isinstance(output, list):
+                output = [output]
+            outputs.append(output)
+            attr = [v for k, v in instance.items() if k in attributes]
+            if len(attr) == 1 and isinstance(attr[0], list):
+                attr = attr[0]
+            inputs.append(attr)
 
         print(outputs)
         print(inputs)
@@ -151,7 +163,7 @@ class NeuralNetwork(object):
         pass
 
 
-if __name__ == '__main__':
+def example1():
     t = NeuralNetwork(0, 0, [1, 2, 1])
 
     # print(t.activations)
@@ -163,4 +175,28 @@ if __name__ == '__main__':
 
     t.train([instance1, instance2], 'y')
 
-    # print(t.backpropagate([0, 0, 0, 0], [1, 1, 1, 1], 1))
+
+def example2():
+    t = NeuralNetwork(0, 0, [2, 4, 3, 2], regulation=0.25)
+
+    # print(t.activations)
+    t.weights[0] = np.array([[0.42, 0.15, 0.40],
+                             [0.72, 0.10, 0.54],
+                             [0.01, 0.19, 0.42],
+                             [0.30, 0.35, 0.68]])
+
+    t.weights[1] = np.array([[0.21, 0.67, 0.14, 0.96, 0.87],
+                             [0.87, 0.42, 0.20, 0.32, 0.89],
+                             [0.03, 0.56, 0.80, 0.69, 0.09]])
+
+    t.weights[2] = np.array([[0.04, 0.87, 0.42, 0.53],
+                             [0.17, 0.10, 0.95, 0.69]])
+
+    instance1 = {'x': [0.32, 0.68], 'y': [0.75, 0.98]}
+    instance2 = {'x': [0.83, 0.02], 'y': [0.75, 0.28]}
+
+    t.train([instance1, instance2], 'y')
+
+
+if __name__ == '__main__':
+    example2()
