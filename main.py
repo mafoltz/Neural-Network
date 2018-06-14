@@ -30,27 +30,32 @@ def checkFilesFrom(args):
 
 def readNetworkFile(filename):
     with open(filename, 'r') as f:
-        lines = [line.rstrip() for line in f]
+        lines = [line.strip() for line in f]
     return lines
 
 
 def readWeightsFile(filename):
     with open(filename, 'r') as f:
-        lines = [line.rstrip() for line in f]
+        lines = [line.strip() for line in f]
         layers = [layer.split(';') for layer in lines]
-        weights = [[layerWeights.split(',') for layerWeights in layer] for layer in layers]
+        weights = [[[float(weight) for weight in layerWeights.split(',')] for layerWeights in layer] for layer in layers]
     return weights
 
 
 def readDatasetFile(filename):
     with open(filename, 'r') as f:
-        lines = [line.rstrip() for line in f]
-        # Gets the names of the headers
-        lists = [line.replace(';',',').split(',') for line in lines]
+        lines = [line.strip() for line in f]
+
+        # Gets the class names (they appear after a ';')
+        classNames = [className.strip() for className in lines[0].split(';')[1].split(',')]
+
+        # Split the values from readed lines in lists and gets the names of the headers
+        lists = [[values.strip() for values in line.replace(';',',').split(',')] for line in lines]
         headers = lists[0]
+
         # Removes the header line and maps the values
         instances = [parseInstance(headers, values) for values in lists[1:]]
-    return instances
+    return instances, classNames
 
 
 def parseInstance(headers, values):
@@ -60,13 +65,14 @@ def parseInstance(headers, values):
     return instance
 
 
-def attributesAndClassNameFrom(instances):
+def attributesAndClassNameFrom(instances, classNames):
     attributes = list(instances[0].keys())
-    className = attributes[len(attributes) - 1]
-    attributes.remove(className)
+    for className in classNames:
+        attributes.remove(className)
+
     for column in attributes:
         instances = normalize(instances, column)
-    return attributes, className
+    return attributes
 
 
 def normalize(instances, field):
@@ -88,13 +94,20 @@ if __name__ == '__main__':
     filenames = checkFilesFrom(sys.argv)
 
     networkFile = readNetworkFile(filenames[0])
-    regulation = networkFile[0]
-    configuration = networkFile[1:]
+    regulation = float(networkFile[0])
+    configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
 
     weights = readWeightsFile(filenames[1])
 
-    instances = readDatasetFile(filenames[2])
-    attributes, className = attributesAndClassNameFrom(instances)
+    instances, classNames = readDatasetFile(filenames[2])
+    attributes = attributesAndClassNameFrom(instances, classNames)
+
+    # Tests
+    print('regulation = {}\n'.format(regulation))
+    print('configuration = {}\n'.format(configuration))
+    print('weights = {}\n'.format(weights))
+    print('classNames = {}\n'.format(classNames))
+    print('attributes = {}\n'.format(attributes))
 
     # Set seed
     random.seed(0)
@@ -105,7 +118,7 @@ if __name__ == '__main__':
 
     # Apply cross validation and print results
     validator = CrossValidator(10, neuralNetwork)
-    acc, f1 = validator.validate(instances, className)
+    acc, f1 = validator.validate(instances, classNames)
 
     print('f1:', f1.average, f1.std_dev)
     print('duration: {}'.format((datetime.now() - start).total_seconds()))
