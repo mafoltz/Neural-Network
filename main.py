@@ -65,7 +65,7 @@ def parseInstance(headers, values):
     return instance
 
 
-def attributesAndClassNameFrom(instances, classNames):
+def attributesFrom(instances, classNames):
     attributes = list(instances[0].keys())
     for className in classNames:
         attributes.remove(className)
@@ -100,14 +100,14 @@ if __name__ == '__main__':
     weights = readWeightsFile(filenames[1])
 
     instances, classNames = readDatasetFile(filenames[2])
-    attributes = attributesAndClassNameFrom(instances, classNames)
+    attributes = attributesFrom(instances, classNames)
 
     # Tests
     print('regulation = {}\n'.format(regulation))
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
-    print('classNames = {}\n'.format(classNames))
     print('attributes = {}\n'.format(attributes))
+    print('class names = {}\n'.format(classNames))
 
     # Set seed
     random.seed(0)
