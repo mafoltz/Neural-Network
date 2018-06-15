@@ -103,17 +103,16 @@ class NeuralNetwork(object):
     def error(self, outputs, expectedOutputs):
         return sum([-y*log(fx) - (1-y)*log(1-fx) for fx, y in zip(outputs, expectedOutputs)])
 
-    def train(self, instances, className, attributes=None):
+    def train(self, instances, classNames, attributes=None):
         if not attributes:
             attributes = list(instances[0].keys())
-            attributes.remove(className)
+            for className in classNames:
+                attributes.remove(className)
 
         outputs = []
         inputs = []
         for instance in instances:
-            output = instance[className]
-            if not isinstance(output, list):
-                output = [output]
+            output = [instance[className] for className in classNames]
             outputs.append(output)
             attr = [v for k, v in instance.items() if k in attributes]
             if len(attr) == 1 and isinstance(attr[0], list):
@@ -176,7 +175,7 @@ def example1():
     instance1 = {'x': 0.13, 'y': 0.9}
     instance2 = {'x': 0.42, 'y': 0.23}
 
-    t.train([instance1, instance2], 'y')
+    t.train([instance1, instance2], ['y'])
 
 
 def example2():
@@ -194,10 +193,10 @@ def example2():
     t.weights[2] = np.array([[0.04, 0.87, 0.42, 0.53],
                              [0.17, 0.10, 0.95, 0.69]])
 
-    instance1 = {'x': [0.32, 0.68], 'y': [0.75, 0.98]}
-    instance2 = {'x': [0.83, 0.02], 'y': [0.75, 0.28]}
+    instance1 = {'x': [0.32, 0.68], 'y1': 0.75, 'y2': 0.98}
+    instance2 = {'x': [0.83, 0.02], 'y1': 0.75, 'y2': 0.28}
 
-    t.train([instance1, instance2], 'y')
+    t.train([instance1, instance2], ['y1', 'y2'])
 
 
 if __name__ == '__main__':

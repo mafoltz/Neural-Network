@@ -65,16 +65,6 @@ def parseInstance(headers, values):
     return instance
 
 
-def attributesFrom(instances, classNames):
-    attributes = list(instances[0].keys())
-    for className in classNames:
-        attributes.remove(className)
-
-    for column in attributes:
-        instances = normalize(instances, column)
-    return attributes
-
-
 def normalize(instances, field):
     fields = [instance[field] for instance in instances]
     minimum = min(fields).value
@@ -100,13 +90,11 @@ if __name__ == '__main__':
     weights = readWeightsFile(filenames[1])
 
     instances, classNames = readDatasetFile(filenames[2])
-    attributes = attributesFrom(instances, classNames)
 
     # Tests
     print('regulation = {}\n'.format(regulation))
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
-    print('attributes = {}\n'.format(attributes))
     print('class names = {}\n'.format(classNames))
 
     # Set seed
@@ -115,6 +103,7 @@ if __name__ == '__main__':
     # Initialize neural network
     neuralNetwork = NeuralNetwork(0, 0, configuration, regulation)
     neuralNetwork.weights = weights
+    neuralNetwork.train(instances, classNames)
 
     # Apply cross validation and print results
     validator = CrossValidator(10, neuralNetwork)
