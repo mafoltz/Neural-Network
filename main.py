@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+import numpy as np
 import random
 from math import ceil, sqrt
 from datetime import datetime
@@ -38,8 +39,12 @@ def readWeightsFile(filename):
     with open(filename, 'r') as f:
         lines = [line.strip() for line in f]
         layers = [layer.split(';') for layer in lines]
-        weights = [[[float(weight) for weight in layerWeights.split(',')] for layerWeights in layer] for layer in layers]
-    return weights
+        weights = []
+        for layer in layers:
+            # Read and add weights for current layer
+            newWeights = np.array([[float(weight) for weight in layerWeights.split(',')] for layerWeights in layer])
+            weights.append(newWeights)
+    return np.array(weights).transpose()
 
 
 def readDatasetFile(filename):
