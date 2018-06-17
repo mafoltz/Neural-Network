@@ -115,14 +115,16 @@ class CrossValidator():
         self.separator = FoldSeparator(k)
         self.algorithm = mLAlgorithm
 
-    def validate(self, instances, className):
+    def validate(self, instances, classNames):
+        className = classNames[0] if isinstance(classNames, list) else classNames
+
         # Conta as classes de cada instancia
         self.separator.separateFolds(instances, className)
 
         results = []
         for i in range(len(self.separator.folds)):
             trainer, tester = self.separator.split(i)
-            self.algorithm.train(trainer, className)
+            self.algorithm.train(trainer, classNames)
 
             measurer = Measurer(self.algorithm, className)
             result = measurer.meaure(tester)
