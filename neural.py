@@ -156,9 +156,56 @@ class NeuralNetwork(object):
             printD('gradient for layer {}: {}'.format(layer, layerGradient))
             regulatedGradients.append(layerGradient)
 
+        self.update(regulatedGradients)
+        return regulatedGradients
+
+    def trainNumerically(self, epsilon, instances, classNames, attributes=None):
+
+        if not attributes:
+            attributes = list(instances[0].keys())
+            for className in classNames:
+                attributes.remove(className)
+
+        outputs = []
+        inputs = []
+        for instance in instances:
+            output = [instance[className].value for className in classNames]
+            outputs.append(output)
+            attr = [item.value for attribute, item in instance.items() if attribute in attributes]
+            if len(attr) == 1 and isinstance(attr[0], list):
+                attr = attr[0]
+            inputs.append(attr)
+
+        def errorFor(layer, row, column):
+            largerError = 0
+            self.weights[layer][row][column] += epsilon
+            for i, (input, output) in enumerate(zip(inputs, outputs)):
+                predictedOutput = self.propagate(input)
+                largerError += self.error(predictedOutput, output)
+            largerError /= len(outputs)
+
+            smallerError = 0
+            self.weights[layer][row][column] -= 2*epsilon
+            for i, (input, output) in enumerate(zip(inputs, outputs)):
+                predictedOutput = self.propagate(input)
+                smallerError += self.error(predictedOutput, output)
+            smallerError /= len(outputs)
+
+            self.weights[layer][row][column] += epsilon
+            return (largerError - smallerError) / (2*epsilon)
+
+        gradients = self.weights
+        for layer, _ in enumerate(self.weights):
+            for row, _ in enumerate(self.weights[layer]):
+                for column, _ in enumerate(self.weights[layer][row]):
+                    gradients[layer][row][column] = errorFor(layer, row, column)
+
+        return gradients
+
+    def update(self, gradients):
         printD()
         for layer in range(self.numLayers-1):
-            layerValue = self.weights[layer] - self.alpha * regulatedGradients[layer]
+            layerValue = self.weights[layer] - self.alpha * gradients[layer]
             printD('old weight for layer {}: {}'.format(layer, self.weights[layer]))
             printD('new weight for layer {}: {}'.format(layer, layerValue))
             self.weights[layer] = layerValue
@@ -176,7 +223,11 @@ def example1():
     instance1 = {'x': Attribute(0.13), 'y': Attribute(0.9)}
     instance2 = {'x': Attribute(0.42), 'y': Attribute(0.23)}
 
-    t.train([instance1, instance2], ['y'])
+    grad = t.train([instance1, instance2], ['y'])
+    delta = t.trainNumerically(0.0000010000, [instance1, instance2], ['y'])
+    print(grad)
+    print()
+    print(delta)
 
 
 def example2():
@@ -201,4 +252,4 @@ def example2():
 
 
 if __name__ == '__main__':
-    example2()
+    example1()
