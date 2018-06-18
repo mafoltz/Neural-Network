@@ -58,8 +58,10 @@ class NeuralNetwork(object):
             matrixes.append(layer)
         self.weights = np.array(matrixes)
 
+
     def sigmoide(self, value):
         return 1 / (1 + exp(-value))
+
 
     def propagate(self, inputs):
         newActivations = [np.array([1] + inputs)]
@@ -77,6 +79,7 @@ class NeuralNetwork(object):
             newActivations.append(layerAct)
         self.activations = np.array(newActivations)
         return self.activations[self.numLayers-1]
+
 
     def backpropagate(self, outputs, expecteds):
         deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)]).transpose()]
@@ -101,40 +104,51 @@ class NeuralNetwork(object):
             gradients.append(gradientDelta.transpose())
         return gradients
 
+
     def error(self, outputs, expectedOutputs):
         return sum([-y*log(fx) - (1-y)*log(1-fx) for fx, y in zip(outputs, expectedOutputs)])
 
-    def train(self, instances, classNames, attributes=None):
-        if not attributes:
-            attributes = list(instances[0].keys())
-            for className in classNames:
-                attributes.remove(className)
 
+    def networkInputsAndOutputsFrom(self, instances, classNames, attributes):
         outputs = []
         inputs = []
+
         for instance in instances:
             output = [instance[className].value for className in classNames]
             outputs.append(output)
+
             attr = [item.value for attribute, item in instance.items() if attribute in attributes]
             if len(attr) == 1 and isinstance(attr[0], list):
                 attr = attr[0]
             inputs.append(attr)
 
+        return inputs, outputs
+
+
+    def gradientsAndErrorFrom(self, inputs, outputs):
         gradients = None
         error = 0
+
         for i, (input, output) in enumerate(zip(inputs, outputs)):
             printD('\nProcessando exemplo {}'.format(i))
+
             predictedOutput = self.propagate(input)
             printD('\nSaída predita: {}'.format(predictedOutput))
             printD('Saída esperada: {}'.format(output))
+
             error += self.error(predictedOutput, output)
             printD('Erro:', error)
+
             gradientDelta = self.backpropagate(predictedOutput, output)
             if not gradients:
                 gradients = gradientDelta
             else:
                 gradients = np.add(gradients, gradientDelta)
 
+        return gradients, error
+
+
+    def accumulatedErrorFrom(self, instances, error):
         squared = self.weights ** 2
         weightSum = 0
         for layer in squared:
@@ -142,11 +156,16 @@ class NeuralNetwork(object):
 
         regulated = self.regulation * weightSum / (2*len(instances))
 
-        error = error / len(instances) + regulated
+        accumulatedError = error / len(instances) + regulated
 
-        printD('\nAccumulated error:', error)
+        printD('\nAccumulated error:', accumulatedError)
 
+        return accumulatedError
+
+
+    def regulatedGradientsFrom(self, instances, gradients):
         regulatedGradients = []
+
         for layer in range(self.numLayers-1):
             p = self.regulation * np.array(self.weights[layer])
             for i in range(len(p)):
@@ -157,7 +176,26 @@ class NeuralNetwork(object):
             regulatedGradients.append(layerGradient)
 
         self.update(regulatedGradients)
+
         return regulatedGradients
+
+
+    def train(self, instances, classNames, attributes=None):
+        if not attributes:
+            attributes = list(instances[0].keys())
+            for className in classNames:
+                attributes.remove(className)
+
+        inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
+
+        gradients, error = self.gradientsAndErrorFrom(inputs, outputs)
+
+        error = self.accumulatedErrorFrom(instances, error)
+
+        regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
+
+        return regulatedGradients
+
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
 
@@ -202,6 +240,7 @@ class NeuralNetwork(object):
 
         return gradients
 
+
     def update(self, gradients):
         printD()
         for layer in range(self.numLayers-1):
@@ -209,6 +248,7 @@ class NeuralNetwork(object):
             printD('old weight for layer {}: {}'.format(layer, self.weights[layer]))
             printD('new weight for layer {}: {}'.format(layer, layerValue))
             self.weights[layer] = layerValue
+
 
     def evaluate(self, test):
         pass
