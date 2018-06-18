@@ -21,6 +21,7 @@ class NeuralNetwork(object):
     Dentro de cada camada, o primeiro elemento da lista é a ativação do bias, e deve ser sempre 1.
     """
     activations = np.array([])
+
     """
     weights: Representa os pesos entre as camadas.
     É uma lista de matrizes, com cada matriz representando a transição entre duas camadas.
@@ -110,6 +111,11 @@ class NeuralNetwork(object):
 
 
     def networkInputsAndOutputsFrom(self, instances, classNames, attributes):
+        if not attributes:
+            attributes = list(instances[0].keys())
+            for className in classNames:
+                attributes.remove(className)
+        
         outputs = []
         inputs = []
 
@@ -181,11 +187,6 @@ class NeuralNetwork(object):
 
 
     def train(self, instances, classNames, attributes=None):
-        if not attributes:
-            attributes = list(instances[0].keys())
-            for className in classNames:
-                attributes.remove(className)
-
         inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
 
         gradients, error = self.gradientsAndErrorFrom(inputs, outputs)
@@ -197,11 +198,6 @@ class NeuralNetwork(object):
 
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
-        if not attributes:
-            attributes = list(instances[0].keys())
-            for className in classNames:
-                attributes.remove(className)
-
         inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
 
 
