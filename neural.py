@@ -193,44 +193,42 @@ class NeuralNetwork(object):
         error = self.accumulatedErrorFrom(instances, error)
 
         regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
-
         return regulatedGradients
 
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
-
         if not attributes:
             attributes = list(instances[0].keys())
             for className in classNames:
                 attributes.remove(className)
 
-        outputs = []
-        inputs = []
-        for instance in instances:
-            output = [instance[className].value for className in classNames]
-            outputs.append(output)
-            attr = [item.value for attribute, item in instance.items() if attribute in attributes]
-            if len(attr) == 1 and isinstance(attr[0], list):
-                attr = attr[0]
-            inputs.append(attr)
+        inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
 
-        def errorFor(layer, row, column):
+
+        def largerErrorFor(layer, row, column):
             largerError = 0
             self.weights[layer][row][column] += epsilon
             for i, (input, output) in enumerate(zip(inputs, outputs)):
                 predictedOutput = self.propagate(input)
                 largerError += self.error(predictedOutput, output)
             largerError /= len(outputs)
+            return largerError
 
+        def smallerErrorFor(layer, row, column):
             smallerError = 0
             self.weights[layer][row][column] -= 2*epsilon
             for i, (input, output) in enumerate(zip(inputs, outputs)):
                 predictedOutput = self.propagate(input)
                 smallerError += self.error(predictedOutput, output)
             smallerError /= len(outputs)
+            return smallerError
 
+        def errorFor(layer, row, column):
             self.weights[layer][row][column] += epsilon
+            largerError = largerErrorFor(layer, row, column)
+            smallerError = smallerErrorFor(layer, row, column)
             return (largerError - smallerError) / (2*epsilon)
+
 
         gradients = self.weights
         for layer, _ in enumerate(self.weights):
