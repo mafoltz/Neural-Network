@@ -10,15 +10,38 @@ from validation import Attribute, CrossValidator, FoldSeparator, Measurer
 from neural import NeuralNetwork
 
 
+TRAINING_MODE = 'training'
+NUMERICAL_VERIFICATION_MODE = 'numerical'
+BACKPROPAGATION_MODE = 'backpropagation'
+
+
 def checkFilesFrom(args):
     # Check number of files
-    if len(args) < 4:
-        print('Requires a network file, an initial weights file and a dataset file as arguments')
+    if len(args) < 2:
+        print('Requires an execution mode as argument.')
+        exit(0)
+
+    # Check if execution mode is valid
+    executionMode = args[1]
+    if not (executionMode == TRAINING_MODE or executionMode == NUMERICAL_VERIFICATION_MODE or executionMode == BACKPROPAGATION_MODE):
+        print('Execution mode must be one of the follows: <{}>, <{}> or <{}>.'.format(TRAINING_MODE, NUMERICAL_VERIFICATION_MODE, BACKPROPAGATION_MODE))
         exit(0)
 
     # Check if files exist
     filenames = []
-    for i in range(1, 4):
+    filenamesEndIndex = 5
+
+    if executionMode == TRAINING_MODE:
+        filenamesEndIndex = 4
+        if len(args) != filenamesEndIndex:
+            print('This execution mode requires a network file and a dataset file as arguments.')
+            exit(0)
+    else:
+        if len(args) != filenamesEndIndex:
+            print('This execution mode requires a network file, an initial weights file and a dataset file as arguments.')
+            exit(0)
+
+    for i in range(2, filenamesEndIndex):
         filename = args[i]
         if not os.path.exists(filename):
             print('File named {} does not exist'.format(filename))
@@ -26,7 +49,7 @@ def checkFilesFrom(args):
         else:
             filenames.append(filename)
 
-    return filenames
+    return executionMode, filenames
 
 
 def readNetworkFile(filename):
@@ -63,6 +86,31 @@ def readDatasetFile(filename):
     return instances, classNames
 
 
+def readTrainingDatasetFile(filename):
+    with open(filename, 'r') as f:
+        lines = [line.strip() for line in f]
+
+        # Gets the names of the headers
+        lists = [line.replace(';',',').split(',') for line in lines]
+        headers = lists[0]
+
+        # Removes the header line and maps the values
+        instances = [parseInstance(headers, values) for values in lists[1:]]
+
+        # Get the class name and values
+        className = headers[len(headers) - 1]
+
+        classValuesList = []
+        for instance in instances:
+            classValue = instance[className]
+            classValue.type = Attribute.Categorical
+            classValuesList.append(classValue)
+        classValues = list(set(classValuesList))
+        classValues.sort()
+
+    return instances, className, classValues
+
+
 def parseInstance(headers, values):
     instance = {}
     for header, value in zip(headers, values):
@@ -82,12 +130,29 @@ def normalize(instances, field):
     return instances
 
 
-if __name__ == '__main__':
-    start = datetime.now()
+def createNeuralNetworkForTrainingFrom(filenames):
+    # Read input data
+    networkFile = readNetworkFile(filenames[0])
+    regulation = float(networkFile[0])
+    configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
 
-    # Read data from input files
-    filenames = checkFilesFrom(sys.argv)
+    instances, className, classValues = readTrainingDatasetFile(filenames[1])
 
+    # Test input data
+    print('regulation = {}\n'.format(regulation))
+    print('configuration = {}\n'.format(configuration))
+    print('class names = {}\n'.format(className))
+    print('class values = {}\n'.format(classValues))
+    print('instances = {}\n'.format(instances))
+
+    # Initialize neural network
+    neuralNetwork = NeuralNetwork(configuration, regulation, classValues)
+
+    return neuralNetwork, instances, className
+
+
+def createNeuralNetworkForVerificationFrom(filenames):
+    # Read input data
     networkFile = readNetworkFile(filenames[0])
     regulation = float(networkFile[0])
     configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
@@ -96,23 +161,58 @@ if __name__ == '__main__':
 
     instances, classNames = readDatasetFile(filenames[2])
 
-    # Tests
+    # Test input data
     print('regulation = {}\n'.format(regulation))
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
     print('class names = {}\n'.format(classNames))
+    print('instances = {}\n'.format(instances))
+
+    # Initialize and train neural network
+    neuralNetwork = NeuralNetwork(configuration, regulation)
+    neuralNetwork.weights = weights
+
+    return neuralNetwork, instances, classNames
+
+
+def executeTraining(filenames):
+    neuralNetwork, instances, className = createNeuralNetworkForTrainingFrom(filenames)
+
+    # Apply cross validation and print results
+    validator = CrossValidator(10, neuralNetwork)
+    acc, f1 = validator.validate(instances, className)
+
+    print('f1:', f1.average, f1.std_dev)
+
+
+def executeNumericalVerification(filenames):
+    # TODO
+    neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
+    neuralNetwork.train(instances, classNames)
+
+
+def executeBackpropagation(filenames):
+    neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
+    neuralNetwork.train(instances, classNames)
+
+
+if __name__ == '__main__':
+    start = datetime.now()
 
     # Set seed
     random.seed(0)
 
-    # Initialize neural network
-    neuralNetwork = NeuralNetwork(0, 0, configuration, regulation)
-    neuralNetwork.weights = weights
-    neuralNetwork.train(instances, classNames)
+    # Read execution mode and input filenames
+    executionMode, filenames = checkFilesFrom(sys.argv)
 
-    # Apply cross validation and print results
-    validator = CrossValidator(10, neuralNetwork)
-    acc, f1 = validator.validate(instances, classNames)
+    # Execute algorithm
+    if executionMode == TRAINING_MODE:
+        executeTraining(filenames)
 
-    print('f1:', f1.average, f1.std_dev)
+    elif executionMode == NUMERICAL_VERIFICATION_MODE:
+        executeNumericalVerification(filenames)
+
+    elif executionMode == BACKPROPAGATION_MODE:
+        executeBackpropagation(filenames)
+
     print('duration: {}'.format((datetime.now() - start).total_seconds()))
