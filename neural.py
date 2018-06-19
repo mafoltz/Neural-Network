@@ -234,8 +234,14 @@ class NeuralNetwork(object):
             self.weights[layer] = layerValue
 
     def evaluate(self, test, className):
-        # inputs, outputs = self.networkInputsAndOutputsFrom(instances)
-        pass
+        inputs, outputs = self.networkInputsAndOutputsFrom([test], className)
+
+        predictedOutputs = self.propagate(inputs)
+
+        maxValue = max(predictedOutputs)
+        maxIndex = predictedOutputs.index(maxValue)
+
+        return self.classValues[maxIndex]
 
 
 def example1():

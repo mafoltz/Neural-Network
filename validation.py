@@ -62,7 +62,7 @@ class Measurer():
         self.className = className
 
     def meaure(self, tests):
-        predicted = [self.algorithm.evaluate(test) for test in tests]
+        predicted = [self.algorithm.evaluate(test, self.className) for test in tests]
         actual = [test[self.className] for test in tests]
 
         zipped = list(zip(predicted, actual))
