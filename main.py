@@ -105,7 +105,8 @@ def readTrainingDatasetFile(filename):
             classValue = instance[className]
             classValue.type = Attribute.Categorical
             classValuesList.append(classValue)
-        classValues = list(set(classValuesList)).sort()
+        classValues = list(set(classValuesList))
+        classValues.sort()
 
     return instances, className, classValues
 
@@ -142,6 +143,7 @@ def createNeuralNetworkForTrainingFrom(filenames):
     print('configuration = {}\n'.format(configuration))
     print('class names = {}\n'.format(className))
     print('class values = {}\n'.format(classValues))
+    print('instances = {}\n'.format(instances))
 
     # Initialize neural network
     neuralNetwork = NeuralNetwork(configuration, regulation, classValues)
@@ -164,6 +166,7 @@ def createNeuralNetworkForVerificationFrom(filenames):
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
     print('class names = {}\n'.format(classNames))
+    print('instances = {}\n'.format(instances))
 
     # Initialize and train neural network
     neuralNetwork = NeuralNetwork(configuration, regulation)
