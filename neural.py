@@ -191,43 +191,41 @@ class NeuralNetwork(object):
         regularizedCost = self.regularizedCostFrom(instances, error)
 
         regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
+        self.regulatedGradients = regulatedGradients
+
         self.applyGradients(regulatedGradients)
+
         return regularizedCost
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
         inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
 
-        def largerErrorFor(layer, row, column):
-            largerError = 0
-            self.weights[layer][row][column] += epsilon
+        def singleErrorFor(layer, row, column):
+            error = 0
             for i, (input, output) in enumerate(zip(inputs, outputs)):
                 predictedOutput = self.propagate(input)
-                largerError += self.error(predictedOutput, output)
-            largerError /= len(outputs)
-            return largerError
-
-        def smallerErrorFor(layer, row, column):
-            smallerError = 0
-            self.weights[layer][row][column] -= 2*epsilon
-            for i, (input, output) in enumerate(zip(inputs, outputs)):
-                predictedOutput = self.propagate(input)
-                smallerError += self.error(predictedOutput, output)
-            smallerError /= len(outputs)
-            return smallerError
+                error += self.error(predictedOutput, output)
+            error = self.regularizedCostFrom(instances, error)
+            return error
 
         def errorFor(layer, row, column):
             self.weights[layer][row][column] += epsilon
-            largerError = largerErrorFor(layer, row, column)
-            smallerError = smallerErrorFor(layer, row, column)
+            largerError = singleErrorFor(layer, row, column)
+            self.weights[layer][row][column] -= 2*epsilon
+            smallerError = singleErrorFor(layer, row, column)
+            self.weights[layer][row][column] += epsilon
             return (largerError - smallerError) / (2*epsilon)
 
-        gradients = self.weights
+        gradients = []
         for layer, _ in enumerate(self.weights):
+            gradients.append([])
             for row, _ in enumerate(self.weights[layer]):
+                gradients[layer].append([])
                 for column, _ in enumerate(self.weights[layer][row]):
+                    gradients[layer][row].append([])
                     gradients[layer][row][column] = errorFor(layer, row, column)
 
-        return gradients
+        return np.array(gradients)
 
     def applyGradients(self, gradients):
         printD()
@@ -257,9 +255,9 @@ def example1():
     instance1 = {'x': Attribute(0.13), 'y': Attribute(0.9)}
     instance2 = {'x': Attribute(0.42), 'y': Attribute(0.23)}
 
-    grad = t.train([instance1, instance2], 'y')
     delta = t.trainNumerically(0.0000010000, [instance1, instance2], 'y')
-    print(grad)
+    t.train([instance1, instance2], 'y')
+    print(t.regulatedGradients)
     print()
     print(delta)
 

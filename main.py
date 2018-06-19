@@ -186,9 +186,18 @@ def executeTraining(filenames):
 
 
 def executeNumericalVerification(filenames):
-    # TODO
     neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
+
+    pesosNumerico = neuralNetwork.trainNumerically(0.0000010000, instances, classNames)
+
     neuralNetwork.train(instances, classNames)
+    pesosBack = NeuralNetwork.regulatedGradients
+
+    print('Pesos calculados por backpropagation:')
+    print(pesosBack)
+    print()
+    print('Pesos calculados numericamente')
+    print(pesosNumerico)
 
 
 def executeBackpropagation(filenames):
