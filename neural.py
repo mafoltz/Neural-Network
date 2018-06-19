@@ -154,7 +154,7 @@ class NeuralNetwork(object):
         return gradients, error
 
 
-    def accumulatedErrorFrom(self, instances, error):
+    def regularizedCostFrom(self, instances, error):
         squared = self.weights ** 2
         weightSum = 0
         for layer in squared:
@@ -162,11 +162,11 @@ class NeuralNetwork(object):
 
         regulated = self.regulation * weightSum / (2*len(instances))
 
-        accumulatedError = error / len(instances) + regulated
+        regularizedCost = error / len(instances) + regulated
 
-        printD('\nAccumulated error:', accumulatedError)
+        printD('\nAccumulated error:', regularizedCost)
 
-        return accumulatedError
+        return regularizedCost
 
 
     def regulatedGradientsFrom(self, instances, gradients):
@@ -191,7 +191,7 @@ class NeuralNetwork(object):
 
         gradients, error = self.gradientsAndErrorFrom(inputs, outputs)
 
-        error = self.accumulatedErrorFrom(instances, error)
+        regularizedCost = self.regularizedCostFrom(instances, error)
 
         regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
         return regulatedGradients
