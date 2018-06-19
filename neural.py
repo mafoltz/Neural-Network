@@ -37,12 +37,10 @@ class NeuralNetwork(object):
     Caso 'configuration' seja especificado, este deve ser uma lista de inteiros,
     onde o tamanho da lista é usado como 'depth', e cada camada tem sua
     'width' específica."""
-    def __init__(self, depth, width, configuration=None, regulation=0):
+    def __init__(self, configuration, regulation=0, classValues=None):
         self.regulation = regulation
         self.alpha = 0.1
-
-        if not configuration:
-            configuration = [width] * depth
+        self.classValues = classValues
 
         self.numLayers = len(configuration)
 
@@ -59,10 +57,8 @@ class NeuralNetwork(object):
             matrixes.append(layer)
         self.weights = np.array(matrixes)
 
-
     def sigmoide(self, value):
         return 1 / (1 + exp(-value))
-
 
     def propagate(self, inputs):
         newActivations = [np.array([1] + inputs)]
@@ -80,7 +76,6 @@ class NeuralNetwork(object):
             newActivations.append(layerAct)
         self.activations = np.array(newActivations)
         return self.activations[self.numLayers-1]
-
 
     def backpropagate(self, outputs, expecteds):
         deltas = [np.array([[f - y] for (f, y) in zip(outputs, expecteds)]).transpose()]
@@ -105,22 +100,24 @@ class NeuralNetwork(object):
             gradients.append(gradientDelta.transpose())
         return gradients
 
-
     def error(self, outputs, expectedOutputs):
         return sum([-y*log(fx) - (1-y)*log(1-fx) for fx, y in zip(outputs, expectedOutputs)])
 
-
-    def networkInputsAndOutputsFrom(self, instances, classNames, attributes):
+    def networkInputsAndOutputsFrom(self, instances, className, attributes):
         if not attributes:
             attributes = list(instances[0].keys())
-            for className in classNames:
-                attributes.remove(className)
-        
+            attributes.remove(className)
+
         outputs = []
         inputs = []
 
         for instance in instances:
-            output = [instance[className].value for className in classNames]
+            instanceClass = instance[className]
+            if instanceClass not in self.classValues:
+                print("Class {} not known to neural network".format(instanceClass))
+                exit(-1)
+            else:
+                output = [1 if value == instanceClass else 0 for value in self.classValues]
             outputs.append(output)
 
             attr = [item.value for attribute, item in instance.items() if attribute in attributes]
@@ -129,7 +126,6 @@ class NeuralNetwork(object):
             inputs.append(attr)
 
         return inputs, outputs
-
 
     def gradientsAndErrorFrom(self, inputs, outputs):
         gradients = None
@@ -153,7 +149,6 @@ class NeuralNetwork(object):
 
         return gradients, error
 
-
     def regularizedCostFrom(self, instances, error):
         squared = self.weights ** 2
         weightSum = 0
@@ -167,7 +162,6 @@ class NeuralNetwork(object):
         printD('\nAccumulated error:', regularizedCost)
 
         return regularizedCost
-
 
     def regulatedGradientsFrom(self, instances, gradients):
         regulatedGradients = []
@@ -185,21 +179,19 @@ class NeuralNetwork(object):
 
         return regulatedGradients
 
-
-    def train(self, instances, classNames, attributes=None):
-        inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
+    def train(self, instances, className, attributes=None):
+        inputs, outputs = self.networkInputsAndOutputsFrom(instances, className, attributes)
 
         gradients, error = self.gradientsAndErrorFrom(inputs, outputs)
 
         regularizedCost = self.regularizedCostFrom(instances, error)
 
         regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
+        self.applyGradients(regulatedGradients)
         return regulatedGradients
-
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
         inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
-
 
         def largerErrorFor(layer, row, column):
             largerError = 0
@@ -225,7 +217,6 @@ class NeuralNetwork(object):
             smallerError = smallerErrorFor(layer, row, column)
             return (largerError - smallerError) / (2*epsilon)
 
-
         gradients = self.weights
         for layer, _ in enumerate(self.weights):
             for row, _ in enumerate(self.weights[layer]):
@@ -234,8 +225,7 @@ class NeuralNetwork(object):
 
         return gradients
 
-
-    def update(self, gradients):
+    def applyGradients(self, gradients):
         printD()
         for layer in range(self.numLayers-1):
             layerValue = self.weights[layer] - self.alpha * gradients[layer]
@@ -243,8 +233,8 @@ class NeuralNetwork(object):
             printD('new weight for layer {}: {}'.format(layer, layerValue))
             self.weights[layer] = layerValue
 
-
-    def evaluate(self, test):
+    def evaluate(self, test, className):
+        # inputs, outputs = self.networkInputsAndOutputsFrom(instances)
         pass
 
 
