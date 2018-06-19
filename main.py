@@ -10,15 +10,26 @@ from validation import Attribute, CrossValidator, FoldSeparator, Measurer
 from neural import NeuralNetwork
 
 
+TRAINING_MODE = 'training'
+NUMERICAL_VERIFICATION_MODE = 'numerical'
+BACKPROPAGATION_MODE = 'backpropagation'
+
+
 def checkFilesFrom(args):
     # Check number of files
-    if len(args) < 4:
-        print('Requires a network file, an initial weights file and a dataset file as arguments')
+    if len(args) < 5:
+        print('Requires an execution mode, a network file, an initial weights file and a dataset file as arguments')
+        exit(0)
+
+    # Check if execution mode is valid
+    executionMode = args[1]
+    if not (executionMode == TRAINING_MODE or executionMode == NUMERICAL_VERIFICATION_MODE or executionMode == BACKPROPAGATION_MODE):
+        print('Execution mode must be one of the follows: <{}>, <{}> or <{}>.'.format(TRAINING_MODE, NUMERICAL_VERIFICATION_MODE, BACKPROPAGATION_MODE))
         exit(0)
 
     # Check if files exist
     filenames = []
-    for i in range(1, 4):
+    for i in range(2, 5):
         filename = args[i]
         if not os.path.exists(filename):
             print('File named {} does not exist'.format(filename))
