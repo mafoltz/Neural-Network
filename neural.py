@@ -54,7 +54,7 @@ class NeuralNetwork(object):
         matrixes = []
         for n1, n2 in zip(configuration, configuration[1:]):
             layer = [[random.random() for i in range(n1 + 1)] for i in range(n2)]
-            matrixes.append(layer)
+            matrixes.append(np.array(layer))
         self.weights = np.array(matrixes)
 
     def sigmoide(self, value):
@@ -103,7 +103,7 @@ class NeuralNetwork(object):
     def error(self, outputs, expectedOutputs):
         return sum([-y*log(fx) - (1-y)*log(1-fx) for fx, y in zip(outputs, expectedOutputs)])
 
-    def networkInputsAndOutputsFrom(self, instances, className, attributes):
+    def networkInputsAndOutputsFrom(self, instances, className, attributes=None):
         if not attributes:
             attributes = list(instances[0].keys())
             attributes.remove(className)
@@ -148,7 +148,7 @@ class NeuralNetwork(object):
             printD('Erro:', error)
 
             gradientDelta = self.backpropagate(predictedOutput, output)
-            if not gradients:
+            if gradients == None:
                 gradients = gradientDelta
             else:
                 gradients = np.add(gradients, gradientDelta)
@@ -240,10 +240,10 @@ class NeuralNetwork(object):
     def evaluate(self, test, className):
         inputs, outputs = self.networkInputsAndOutputsFrom([test], className)
 
-        predictedOutputs = self.propagate(inputs)
+        predictedOutputs = self.propagate(inputs[0])
 
         maxValue = max(predictedOutputs)
-        maxIndex = predictedOutputs.index(maxValue)
+        maxIndex = list(predictedOutputs).index(maxValue)
 
         return self.classValues[maxIndex]
 
