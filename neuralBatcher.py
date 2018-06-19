@@ -19,7 +19,8 @@ class NeuralBatcher():
         iteration = 0
         while errorDif > 0.002 and iteration < self.maxIterations:
             error = self.neuralNetwork.train(batches[batchIndex], className, attributes)
-            errorDif = error - oldError
+            errorDif = abs(error - oldError)
+            oldError = error
             batchIndex = batchIndex + 1
             if batchIndex == len(batches):
                 batchIndex = 0
