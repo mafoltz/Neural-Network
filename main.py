@@ -83,7 +83,15 @@ def readDatasetFile(filename):
 
         # Removes the header line and maps the values
         instances = [parseInstance(headers, values) for values in lists[1:]]
-    return instances, classNames
+
+        # Join class attributes in one attribute
+        className = 'class'
+        for instance in instances:
+            instance[className] = [instance[value] for value in classNames]
+            for value in classNames:
+                instance.pop(value, None)
+
+    return instances, className
 
 
 def readTrainingDatasetFile(filename):
@@ -141,7 +149,7 @@ def createNeuralNetworkForTrainingFrom(filenames):
     # Test input data
     print('regulation = {}\n'.format(regulation))
     print('configuration = {}\n'.format(configuration))
-    print('class names = {}\n'.format(className))
+    print('class name = {}\n'.format(className))
     print('class values = {}\n'.format(classValues))
     print('instances = {}\n'.format(instances))
 
@@ -159,20 +167,20 @@ def createNeuralNetworkForVerificationFrom(filenames):
 
     weights = readWeightsFile(filenames[1])
 
-    instances, classNames = readDatasetFile(filenames[2])
+    instances, className = readDatasetFile(filenames[2])
 
     # Test input data
     print('regulation = {}\n'.format(regulation))
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
-    print('class names = {}\n'.format(classNames))
+    print('class name = {}\n'.format(className))
     print('instances = {}\n'.format(instances))
 
     # Initialize and train neural network
     neuralNetwork = NeuralNetwork(configuration, regulation)
     neuralNetwork.weights = weights
 
-    return neuralNetwork, instances, classNames
+    return neuralNetwork, instances, className
 
 
 def executeTraining(filenames):
@@ -186,23 +194,20 @@ def executeTraining(filenames):
 
 
 def executeNumericalVerification(filenames):
-    neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
+    neuralNetwork, instances, className = createNeuralNetworkForVerificationFrom(filenames)
 
-    pesosNumerico = neuralNetwork.trainNumerically(0.0000010000, instances, classNames)
+    numericWeights = neuralNetwork.trainNumerically(0.0000010000, instances, className)
 
-    neuralNetwork.train(instances, classNames)
-    pesosBack = NeuralNetwork.regulatedGradients
+    neuralNetwork.train(instances, className)
+    backpropagationWeights = neuralNetwork.regulatedGradients
 
-    print('Pesos calculados por backpropagation:')
-    print(pesosBack)
-    print()
-    print('Pesos calculados numericamente')
-    print(pesosNumerico)
+    print('Pesos calculados por backpropagation:\n{}'.format(backpropagationWeights))
+    print('Pesos calculados numericamente:\n{}\n'.format(numericWeights))
 
 
 def executeBackpropagation(filenames):
-    neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
-    neuralNetwork.train(instances, classNames)
+    neuralNetwork, instances, className = createNeuralNetworkForVerificationFrom(filenames)
+    neuralNetwork.train(instances, className)
 
 
 if __name__ == '__main__':
