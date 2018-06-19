@@ -37,7 +37,7 @@ def checkFilesFrom(args):
         else:
             filenames.append(filename)
 
-    return filenames
+    return executionMode, filenames
 
 
 def readNetworkFile(filename):
@@ -74,6 +74,22 @@ def readDatasetFile(filename):
     return instances, classNames
 
 
+def readTrainingDatasetFile(filename):
+    with open(filename, 'r') as f:
+        lines = [line.strip() for line in f]
+
+        # Gets the names of the headers
+        lists = [line.replace(';',',').split(',') for line in lines]
+        headers = lists[0]
+
+        # Get the class name
+        className = headers[len(headers) - 1]
+
+        # Removes the header line and maps the values
+        instances = [parseInstance(headers, values) for values in lists[1:]]
+    return instances, className
+
+
 def parseInstance(headers, values):
     instance = {}
     for header, value in zip(headers, values):
@@ -93,37 +109,63 @@ def normalize(instances, field):
     return instances
 
 
+def executeTraining(self, neuralNetwork, dataFilename):
+    # Read instances and class name
+    instances, className = readTrainingDatasetFile(filenames[2])
+    print('class names = {}\n'.format(className))
+
+    # Apply cross validation and print results
+    validator = CrossValidator(10, neuralNetwork)
+    acc, f1 = validator.validate(instances, className)
+
+    print('f1:', f1.average, f1.std_dev)
+
+
+def executeNumericalVerification(self, neuralNetwork, dataFilename):
+    pass
+
+
+def executeBackpropagation(self, neuralNetwork, dataFilename):
+    # Read instances and class names
+    instances, classNames = readDatasetFile(filenames[2])
+    print('class names = {}\n'.format(classNames))
+
+    # Train neural network with backpropagation
+    neuralNetwork.train(instances, classNames)
+
+
 if __name__ == '__main__':
     start = datetime.now()
 
+    # Set seed
+    random.seed(0)
+
     # Read data from input files
-    filenames = checkFilesFrom(sys.argv)
+    executionMode, filenames = checkFilesFrom(sys.argv)
 
     networkFile = readNetworkFile(filenames[0])
     regulation = float(networkFile[0])
     configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
-
+    
     weights = readWeightsFile(filenames[1])
 
-    instances, classNames = readDatasetFile(filenames[2])
+    # Initialize neural network
+    neuralNetwork = NeuralNetwork(0, 0, configuration, regulation)
+    neuralNetwork.weights = weights
 
     # Tests
     print('regulation = {}\n'.format(regulation))
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
-    print('class names = {}\n'.format(classNames))
 
-    # Set seed
-    random.seed(0)
+    # Execute algorithm
+    if executionMode == TRAINING_MODE:
+        self.executeTraining(neuralNetwork, dataFilename)
 
-    # Initialize neural network
-    neuralNetwork = NeuralNetwork(0, 0, configuration, regulation)
-    neuralNetwork.weights = weights
-    neuralNetwork.train(instances, classNames)
+    elif executionMode == NUMERICAL_VERIFICATION_MODE:
+        self.executeNumericalVerification(neuralNetwork, dataFilename)
 
-    # Apply cross validation and print results
-    validator = CrossValidator(10, neuralNetwork)
-    acc, f1 = validator.validate(instances, classNames)
+    elif executionMode == BACKPROPAGATION_MODE:
+        self.executeBackpropagation(neuralNetwork, dataFilename)
 
-    print('f1:', f1.average, f1.std_dev)
     print('duration: {}'.format((datetime.now() - start).total_seconds()))
