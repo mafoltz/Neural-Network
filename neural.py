@@ -192,7 +192,7 @@ class NeuralNetwork(object):
 
         regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
         self.applyGradients(regulatedGradients)
-        return regulatedGradients
+        return regularizedCost
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
         inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
