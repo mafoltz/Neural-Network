@@ -113,11 +113,17 @@ class NeuralNetwork(object):
 
         for instance in instances:
             instanceClass = instance[className]
-            if instanceClass not in self.classValues:
-                print("Class {} not known to neural network".format(instanceClass))
-                exit(-1)
+            if not self.classValues:
+                if isinstance(instanceClass, list):
+                    output = [attr.value for attr in instanceClass]
+                else:
+                    output = [instanceClass.value]
             else:
-                output = [1 if value == instanceClass else 0 for value in self.classValues]
+                if instanceClass in self.classValues:
+                    output = [1.0 if value == instanceClass else 0.0 for value in self.classValues]
+                else:
+                    print("Class {} not known to neural network".format(instanceClass))
+                    exit(-1)
             outputs.append(output)
 
             attr = [item.value for attribute, item in instance.items() if attribute in attributes]
@@ -174,8 +180,6 @@ class NeuralNetwork(object):
             layerGradient = np.add(gradients[layer], p) / len(instances)
             printD('gradient for layer {}: {}'.format(layer, layerGradient))
             regulatedGradients.append(layerGradient)
-
-        self.update(regulatedGradients)
 
         return regulatedGradients
 
@@ -245,7 +249,7 @@ class NeuralNetwork(object):
 
 
 def example1():
-    t = NeuralNetwork(0, 0, [1, 2, 1])
+    t = NeuralNetwork([1, 2, 1])
 
     t.weights[0] = np.array([[0.4, 0.1], [0.3, 0.2]])
     t.weights[1] = np.array([[0.7, 0.5, 0.6]])
@@ -253,15 +257,15 @@ def example1():
     instance1 = {'x': Attribute(0.13), 'y': Attribute(0.9)}
     instance2 = {'x': Attribute(0.42), 'y': Attribute(0.23)}
 
-    grad = t.train([instance1, instance2], ['y'])
-    delta = t.trainNumerically(0.0000010000, [instance1, instance2], ['y'])
+    grad = t.train([instance1, instance2], 'y')
+    delta = t.trainNumerically(0.0000010000, [instance1, instance2], 'y')
     print(grad)
     print()
     print(delta)
 
 
 def example2():
-    t = NeuralNetwork(0, 0, [2, 4, 3, 2], regulation=0.25)
+    t = NeuralNetwork([2, 4, 3, 2], regulation=0.25)
 
     t.weights[0] = np.array([[0.42, 0.15, 0.40],
                              [0.72, 0.10, 0.54],
@@ -275,10 +279,10 @@ def example2():
     t.weights[2] = np.array([[0.04, 0.87, 0.42, 0.53],
                              [0.17, 0.10, 0.95, 0.69]])
 
-    instance1 = {'x1': Attribute(0.32), 'x2': Attribute(0.68), 'y1': Attribute(0.75), 'y2': Attribute(0.98)}
-    instance2 = {'x1': Attribute(0.83), 'x2': Attribute(0.02), 'y1': Attribute(0.75), 'y2': Attribute(0.28)}
+    instance1 = {'x1': Attribute(0.32), 'x2': Attribute(0.68), 'y': [Attribute(0.75), Attribute(0.98)]}
+    instance2 = {'x1': Attribute(0.83), 'x2': Attribute(0.02), 'y': [Attribute(0.75), Attribute(0.28)]}
 
-    t.train([instance1, instance2], ['y1', 'y2'])
+    t.train([instance1, instance2], 'y')
 
 
 if __name__ == '__main__':
