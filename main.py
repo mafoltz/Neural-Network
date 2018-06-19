@@ -17,8 +17,8 @@ BACKPROPAGATION_MODE = 'backpropagation'
 
 def checkFilesFrom(args):
     # Check number of files
-    if len(args) < 5:
-        print('Requires an execution mode, a network file, an initial weights file and a dataset file as arguments')
+    if len(args) < 2:
+        print('Requires an execution mode as argument.')
         exit(0)
 
     # Check if execution mode is valid
@@ -29,7 +29,19 @@ def checkFilesFrom(args):
 
     # Check if files exist
     filenames = []
-    for i in range(2, 5):
+    filenamesEndIndex = 5
+
+    if executionMode == TRAINING_MODE:
+        filenamesEndIndex = 4
+        if len(args) != filenamesEndIndex:
+            print('This execution mode requires a network file and a dataset file as arguments.')
+            exit(0)
+    else:
+        if len(args) != filenamesEndIndex:
+            print('This execution mode requires a network file, an initial weights file and a dataset file as arguments.')
+            exit(0)
+
+    for i in range(2, filenamesEndIndex):
         filename = args[i]
         if not os.path.exists(filename):
             print('File named {} does not exist'.format(filename))
@@ -82,12 +94,20 @@ def readTrainingDatasetFile(filename):
         lists = [line.replace(';',',').split(',') for line in lines]
         headers = lists[0]
 
-        # Get the class name
-        className = headers[len(headers) - 1]
-
         # Removes the header line and maps the values
         instances = [parseInstance(headers, values) for values in lists[1:]]
-    return instances, className
+
+        # Get the class name and values
+        className = headers[len(headers) - 1]
+
+        classValuesList = []
+        for instance in instances:
+            classValue = instance[className]
+            classValue.type = Attribute.Categorical
+            classValuesList.append(classValue)
+        classValues = list(set(classValuesList)).sort()
+
+    return instances, className, classValues
 
 
 def parseInstance(headers, values):
@@ -109,10 +129,51 @@ def normalize(instances, field):
     return instances
 
 
-def executeTraining(self, neuralNetwork, dataFilename):
-    # Read instances and class name
-    instances, className = readTrainingDatasetFile(filenames[2])
+def createNeuralNetworkForTrainingFrom(filenames):
+    # Read input data
+    networkFile = readNetworkFile(filenames[0])
+    regulation = float(networkFile[0])
+    configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
+
+    instances, className, classValues = readTrainingDatasetFile(filenames[1])
+
+    # Test input data
+    print('regulation = {}\n'.format(regulation))
+    print('configuration = {}\n'.format(configuration))
     print('class names = {}\n'.format(className))
+    print('class values = {}\n'.format(classValues))
+
+    # Initialize neural network
+    neuralNetwork = NeuralNetwork(configuration, regulation, classValues)
+
+    return neuralNetwork, instances, className
+
+
+def createNeuralNetworkForVerificationFrom(filenames):
+    # Read input data
+    networkFile = readNetworkFile(filenames[0])
+    regulation = float(networkFile[0])
+    configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
+
+    weights = readWeightsFile(filenames[1])
+
+    instances, classNames = readDatasetFile(filenames[2])
+
+    # Test input data
+    print('regulation = {}\n'.format(regulation))
+    print('configuration = {}\n'.format(configuration))
+    print('weights = {}\n'.format(weights))
+    print('class names = {}\n'.format(classNames))
+
+    # Initialize and train neural network
+    neuralNetwork = NeuralNetwork(configuration, regulation)
+    neuralNetwork.weights = weights
+
+    return neuralNetwork, instances, classNames
+
+
+def executeTraining(filenames):
+    neuralNetwork, instances, className = createNeuralNetworkForTrainingFrom(filenames)
 
     # Apply cross validation and print results
     validator = CrossValidator(10, neuralNetwork)
@@ -121,16 +182,14 @@ def executeTraining(self, neuralNetwork, dataFilename):
     print('f1:', f1.average, f1.std_dev)
 
 
-def executeNumericalVerification(self, neuralNetwork, dataFilename):
-    pass
+def executeNumericalVerification(filenames):
+    # TODO
+    neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
+    neuralNetwork.train(instances, classNames)
 
 
-def executeBackpropagation(self, neuralNetwork, dataFilename):
-    # Read instances and class names
-    instances, classNames = readDatasetFile(filenames[2])
-    print('class names = {}\n'.format(classNames))
-
-    # Train neural network with backpropagation
+def executeBackpropagation(filenames):
+    neuralNetwork, instances, classNames = createNeuralNetworkForVerificationFrom(filenames)
     neuralNetwork.train(instances, classNames)
 
 
@@ -140,32 +199,17 @@ if __name__ == '__main__':
     # Set seed
     random.seed(0)
 
-    # Read data from input files
+    # Read execution mode and input filenames
     executionMode, filenames = checkFilesFrom(sys.argv)
-
-    networkFile = readNetworkFile(filenames[0])
-    regulation = float(networkFile[0])
-    configuration = [int(numOfNeurons) for numOfNeurons in networkFile[1:]]
-    
-    weights = readWeightsFile(filenames[1])
-
-    # Initialize neural network
-    neuralNetwork = NeuralNetwork(0, 0, configuration, regulation)
-    neuralNetwork.weights = weights
-
-    # Tests
-    print('regulation = {}\n'.format(regulation))
-    print('configuration = {}\n'.format(configuration))
-    print('weights = {}\n'.format(weights))
 
     # Execute algorithm
     if executionMode == TRAINING_MODE:
-        self.executeTraining(neuralNetwork, dataFilename)
+        executeTraining(filenames)
 
     elif executionMode == NUMERICAL_VERIFICATION_MODE:
-        self.executeNumericalVerification(neuralNetwork, dataFilename)
+        executeNumericalVerification(filenames)
 
     elif executionMode == BACKPROPAGATION_MODE:
-        self.executeBackpropagation(neuralNetwork, dataFilename)
+        executeBackpropagation(filenames)
 
     print('duration: {}'.format((datetime.now() - start).total_seconds()))
