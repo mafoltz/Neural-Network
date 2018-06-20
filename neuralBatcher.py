@@ -15,19 +15,23 @@ class NeuralNetworkBatcher():
 
         oldError = 10000000000
         errorDif = 10000000000
-        batchIndex = 0
+        iteration = 0
 
         while errorDif > self.maxErrorDiff:
-            self.neuralNetwork.train(batches[batchIndex], className, attributes)
-            
-            error = self.neuralNetwork.regularizedCost
+            error = 0
+
+            # For each batch, add the batch error
+            for batchIndex in range(0, len(batches)):
+                self.neuralNetwork.train(batches[batchIndex], className, attributes)
+                error += self.neuralNetwork.regularizedCost
+
+            # Calculate error diff by comparing batches error average with previous error average
+            error = error / len(batches)
             errorDif = abs(error - oldError)
             oldError = error
-            print('Batch {} trained with error: {}'.format(batchIndex, error))
 
-            batchIndex = batchIndex + 1
-            if batchIndex == len(batches):
-                batchIndex = 0
+            print('Iteration {} trained with error: {}'.format(iteration, error))
+            iteration += 1
 
     def evaluate(self, test, className):
         return self.neuralNetwork.evaluate(test, className)
