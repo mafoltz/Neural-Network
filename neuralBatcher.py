@@ -17,7 +17,9 @@ class NeuralNetworkBatcher():
         batchIndex = 0
 
         while errorDif > 0.01:
-            error = self.neuralNetwork.train(batches[batchIndex], className, attributes)
+            self.neuralNetwork.train(batches[batchIndex], className, attributes)
+            
+            error = self.neuralNetwork.regularizedCost
             errorDif = abs(error - oldError)
             oldError = error
             print('Batch {} trained with error: {}'.format(batchIndex, error))

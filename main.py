@@ -208,8 +208,7 @@ def executeNumericalVerification(filenames):
 
     numericWeights = neuralNetwork.trainNumerically(0.0000010000, instances, className)
 
-    neuralNetwork.train(instances, className)
-    backpropagationWeights = neuralNetwork.regulatedGradients
+    backpropagationWeights = neuralNetwork.train(instances, className)
 
     print('Backpropagation calculated weights:\n{}\n'.format(backpropagationWeights))
     print('Numerically calculated weights:\n{}\n'.format(numericWeights))
@@ -217,7 +216,10 @@ def executeNumericalVerification(filenames):
 
 def executeBackpropagation(filenames):
     neuralNetwork, instances, className = createNeuralNetworkForVerificationFrom(filenames)
-    neuralNetwork.train(instances, className)
+
+    backpropagationWeights = neuralNetwork.train(instances, className)
+
+    print('Backpropagation calculated weights:\n{}\n'.format(backpropagationWeights))
 
 
 if __name__ == '__main__':

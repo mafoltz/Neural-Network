@@ -190,13 +190,13 @@ class NeuralNetwork(object):
         gradients, error = self.gradientsAndErrorFrom(inputs, outputs)
 
         regularizedCost = self.regularizedCostFrom(instances, error)
+        self.regularizedCost = regularizedCost
 
         regulatedGradients = self.regulatedGradientsFrom(instances, gradients)
-        self.regulatedGradients = regulatedGradients
 
         self.applyGradients(regulatedGradients)
 
-        return regularizedCost
+        return regulatedGradients
 
     def trainNumerically(self, epsilon, instances, classNames, attributes=None):
         inputs, outputs = self.networkInputsAndOutputsFrom(instances, classNames, attributes)
