@@ -206,20 +206,20 @@ def executeTraining(filenames):
 def executeNumericalVerification(filenames):
     neuralNetwork, instances, className = createNeuralNetworkForVerificationFrom(filenames)
 
-    numericWeights = neuralNetwork.trainNumerically(0.0000010000, instances, className)
+    numericGradients = neuralNetwork.trainNumerically(0.0000010000, instances, className)
 
-    backpropagationWeights = neuralNetwork.train(instances, className)
+    backpropagationGradients = neuralNetwork.train(instances, className)
 
-    print('Backpropagation calculated weights:\n{}\n'.format(backpropagationWeights))
-    print('Numerically calculated weights:\n{}\n'.format(numericWeights))
+    print('Backpropagation calculated gradients:\n{}\n'.format(backpropagationGradients))
+    print('Numerically calculated gradients:\n{}\n'.format(numericGradients))
 
 
 def executeBackpropagation(filenames):
     neuralNetwork, instances, className = createNeuralNetworkForVerificationFrom(filenames)
 
-    backpropagationWeights = neuralNetwork.train(instances, className)
+    backpropagationGradients = neuralNetwork.train(instances, className)
 
-    print('Backpropagation calculated weights:\n{}\n'.format(backpropagationWeights))
+    print('Backpropagation calculated gradients:\n{}\n'.format(backpropagationGradients))
 
 
 if __name__ == '__main__':
