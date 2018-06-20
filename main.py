@@ -171,6 +171,16 @@ def printTrainingSet(instances):
     print()
 
 
+def printGradients(title, gradients):
+    print('=======================================================================')
+    print(title)
+    for i, thetas in enumerate(gradients):
+        print('Theta {} gradients:'.format(i))
+        for thetaGradients in thetas:
+            print('\t{}'.format(thetaGradients))
+        print()
+
+
 def createNeuralNetworkForTrainingFrom(filenames):
     # Read input data
     networkFile = readNetworkFile(filenames[0])
@@ -233,11 +243,12 @@ def executeNumericalVerification(filenames):
     neuralNetwork, instances, className = createNeuralNetworkForVerificationFrom(filenames)
 
     numericGradients = neuralNetwork.trainNumerically(0.0000010000, instances, className)
-
     backpropagationGradients = neuralNetwork.train(instances, className)
+    gradientsError = abs(numericGradients - backpropagationGradients)
 
-    print('Backpropagation calculated gradients:\n{}\n'.format(backpropagationGradients))
-    print('Numerically calculated gradients:\n{}\n'.format(numericGradients))
+    printGradients('Backpropagation calculated gradients:\n', backpropagationGradients)
+    printGradients('Numerically calculated gradients:\n', numericGradients)
+    printGradients('Gradients error:\n', gradientsError)
 
 
 def executeBackpropagation(filenames):
@@ -245,7 +256,7 @@ def executeBackpropagation(filenames):
 
     backpropagationGradients = neuralNetwork.train(instances, className)
 
-    print('Backpropagation calculated gradients:\n{}\n'.format(backpropagationGradients))
+    printGradients('Backpropagation calculated gradients:\n', backpropagationGradients)
 
 
 if __name__ == '__main__':
