@@ -16,7 +16,7 @@ class NeuralNetworkBatcher():
         oldError = 10000000000
         errorDif = 10000000000
         iteration = 0
-
+        print("started again")
         while errorDif > self.maxErrorDiff:
             error = 0
 
@@ -35,3 +35,6 @@ class NeuralNetworkBatcher():
 
     def evaluate(self, test, className):
         return self.neuralNetwork.evaluate(test, className)
+
+    def reset(self):
+        self.neuralNetwork.reset()

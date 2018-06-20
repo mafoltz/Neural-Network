@@ -3,7 +3,7 @@
 import numpy as np
 import random
 from math import exp, log
-from validation import Attribute
+import copy
 
 
 DEBUG = False
@@ -55,7 +55,11 @@ class NeuralNetwork(object):
         for n1, n2 in zip(configuration, configuration[1:]):
             layer = [[random.random() for i in range(n1 + 1)] for i in range(n2)]
             matrixes.append(np.array(layer))
-        self.weights = np.array(matrixes)
+        self.originalWeights = np.array(matrixes)
+        self.weights = copy.deepcopy(self.originalWeights)
+
+    def reset(self):
+        self.weights = copy.deepcopy(self.originalWeights)
 
     def sigmoide(self, value):
         return 1 / (1 + exp(-value))

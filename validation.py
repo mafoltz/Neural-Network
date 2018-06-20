@@ -122,6 +122,7 @@ class CrossValidator():
         results = []
         for i in range(len(self.separator.folds)):
             trainer, tester = self.separator.split(i)
+            self.algorithm.reset()
             self.algorithm.train(trainer, className)
 
             measurer = Measurer(self.algorithm, className)
