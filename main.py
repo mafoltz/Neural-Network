@@ -243,4 +243,4 @@ if __name__ == '__main__':
     elif executionMode == BACKPROPAGATION_MODE:
         executeBackpropagation(filenames)
 
-    print('Duration: {} seconds'.format((datetime.now() - start).total_seconds()))
+    print('Duration: {} seconds\n'.format((datetime.now() - start).total_seconds()))
