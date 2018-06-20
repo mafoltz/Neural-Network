@@ -157,6 +157,9 @@ class NeuralNetwork(object):
             else:
                 gradients = np.add(gradients, gradientDelta)
 
+        # Average error
+        error = error / (i + 1)
+        
         return gradients, error
 
     def regularizedCostFrom(self, instances, error):
@@ -167,7 +170,7 @@ class NeuralNetwork(object):
 
         regulated = self.regulation * weightSum / (2*len(instances))
 
-        regularizedCost = error / len(instances) + regulated
+        regularizedCost = error + regulated
 
         printD('\nAccumulated error:', regularizedCost)
 
