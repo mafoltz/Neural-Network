@@ -193,8 +193,9 @@ def createNeuralNetworkForVerificationFrom(filenames):
 def executeTraining(filenames):
     neuralNetwork, instances, className = createNeuralNetworkForTrainingFrom(filenames)
 
-    numOfBatches = 50
-    neuralNetworkBatches = NeuralNetworkBatcher(neuralNetwork, numOfBatches)
+    numOfBatches = 100
+    maxErrorDiff = 0.1
+    neuralNetworkBatches = NeuralNetworkBatcher(neuralNetwork, numOfBatches, maxErrorDiff)
 
     # Apply cross validation and print results
     validator = CrossValidator(10, neuralNetworkBatches)

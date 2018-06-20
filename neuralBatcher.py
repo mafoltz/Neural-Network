@@ -5,9 +5,10 @@ import numpy as np
 
 class NeuralNetworkBatcher():
 
-    def __init__(self, neuralNetwork, numOfBatches):
+    def __init__(self, neuralNetwork, numOfBatches, maxErrorDiff):
         self.neuralNetwork = neuralNetwork
         self.numOfBatches = numOfBatches
+        self.maxErrorDiff = maxErrorDiff
 
     def train(self, instances, className, attributes=None):
         batches = np.array_split(instances, self.numOfBatches)
@@ -16,7 +17,7 @@ class NeuralNetworkBatcher():
         errorDif = 10000000000
         batchIndex = 0
 
-        while errorDif > 0.01:
+        while errorDif > self.maxErrorDiff:
             self.neuralNetwork.train(batches[batchIndex], className, attributes)
             
             error = self.neuralNetwork.regularizedCost
