@@ -84,6 +84,10 @@ def readDatasetFile(filename):
         # Removes the header line and maps the values
         instances = [parseInstance(headers, values) for values in lists[1:]]
 
+        # Normalize instances
+        for field in headers:
+            instances = normalize(instances, field)
+
         # Join class attributes in one attribute
         className = 'class'
         for instance in instances:
@@ -104,6 +108,10 @@ def readTrainingDatasetFile(filename):
 
         # Removes the header line and maps the values
         instances = [parseInstance(headers, values) for values in lists[1:]]
+
+        # Normalize instances
+        for field in headers:
+            instances = normalize(instances, field)
 
         # Get the class name and values
         className = headers[len(headers) - 1]
@@ -130,8 +138,8 @@ def normalize(instances, field):
     fields = [instance[field] for instance in instances]
     minimum = min(fields).value
     maximum = max(fields).value
-    if maximum == minimum and maximum == 0:
-        maximum = 1
+    if maximum == minimum:
+        maximum += 1
     for instance in instances:
         if instance[field].type == Attribute.Numerical:
             instance[field].value = (instance[field].value - minimum) / (maximum - minimum)
