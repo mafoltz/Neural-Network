@@ -160,7 +160,6 @@ def createNeuralNetworkForTrainingFrom(filenames):
     print('configuration = {}\n'.format(configuration))
     print('class name = {}\n'.format(className))
     print('class values = {}\n'.format(classValues))
-    print('instances = {}\n'.format(instances))
 
     # Initialize neural network
     neuralNetwork = NeuralNetwork(configuration, regulation, classValues)
@@ -183,7 +182,6 @@ def createNeuralNetworkForVerificationFrom(filenames):
     print('configuration = {}\n'.format(configuration))
     print('weights = {}\n'.format(weights))
     print('class name = {}\n'.format(className))
-    print('instances = {}\n'.format(instances))
 
     # Initialize and train neural network
     neuralNetwork = NeuralNetwork(configuration, regulation)

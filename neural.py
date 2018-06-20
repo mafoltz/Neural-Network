@@ -5,8 +5,8 @@ import random
 from math import exp, log
 from validation import Attribute
 
-DEBUG = True
 
+DEBUG = False
 
 def printD(*args, **kwargs):
     if DEBUG:
