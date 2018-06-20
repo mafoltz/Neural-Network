@@ -45,7 +45,7 @@ def checkFilesFrom(args):
     for i in range(2, filenamesEndIndex):
         filename = args[i]
         if not os.path.exists(filename):
-            print('File named {} does not exist'.format(filename))
+            print('File named {} does not exist.'.format(filename))
             exit(0)
         else:
             filenames.append(filename)
@@ -156,10 +156,10 @@ def createNeuralNetworkForTrainingFrom(filenames):
     instances, className, classValues = readTrainingDatasetFile(filenames[1])
 
     # Test input data
-    print('regulation = {}\n'.format(regulation))
-    print('configuration = {}\n'.format(configuration))
-    print('class name = {}\n'.format(className))
-    print('class values = {}\n'.format(classValues))
+    print('Regulation: {}\n'.format(regulation))
+    print('Configuration: {}\n'.format(configuration))
+    print('Class name: {}\n'.format(className))
+    print('Class values: {}\n'.format(classValues))
 
     # Initialize neural network
     neuralNetwork = NeuralNetwork(configuration, regulation, classValues)
@@ -178,12 +178,12 @@ def createNeuralNetworkForVerificationFrom(filenames):
     instances, className = readDatasetFile(filenames[2])
 
     # Test input data
-    print('regulation = {}\n'.format(regulation))
-    print('configuration = {}\n'.format(configuration))
-    print('weights = {}\n'.format(weights))
-    print('class name = {}\n'.format(className))
+    print('Regulation: {}\n'.format(regulation))
+    print('Configuration: {}\n'.format(configuration))
+    print('Initial weights:\n{}\n'.format(weights))
 
     # Initialize and train neural network
+    print('Training neural network...\n')
     neuralNetwork = NeuralNetwork(configuration, regulation)
     neuralNetwork.weights = weights
 
@@ -211,8 +211,8 @@ def executeNumericalVerification(filenames):
     neuralNetwork.train(instances, className)
     backpropagationWeights = neuralNetwork.regulatedGradients
 
-    print('Pesos calculados por backpropagation:\n{}'.format(backpropagationWeights))
-    print('Pesos calculados numericamente:\n{}\n'.format(numericWeights))
+    print('Backpropagation calculated weights:\n{}\n'.format(backpropagationWeights))
+    print('Numerically calculated weights:\n{}\n'.format(numericWeights))
 
 
 def executeBackpropagation(filenames):
@@ -230,6 +230,8 @@ if __name__ == '__main__':
     executionMode, filenames = checkFilesFrom(sys.argv)
 
     # Execute algorithm
+    print('Executing {} mode...\n'.format(executionMode))
+
     if executionMode == TRAINING_MODE:
         executeTraining(filenames)
 
@@ -239,4 +241,4 @@ if __name__ == '__main__':
     elif executionMode == BACKPROPAGATION_MODE:
         executeBackpropagation(filenames)
 
-    print('duration: {}'.format((datetime.now() - start).total_seconds()))
+    print('Duration: {} seconds'.format((datetime.now() - start).total_seconds()))

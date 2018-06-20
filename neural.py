@@ -181,6 +181,7 @@ class NeuralNetwork(object):
             printD('gradient for layer {}: {}'.format(layer, layerGradient))
             regulatedGradients.append(layerGradient)
 
+        regulatedGradients = np.array([np.array(list) for list in regulatedGradients])
         return regulatedGradients
 
     def train(self, instances, className, attributes=None):
@@ -225,7 +226,8 @@ class NeuralNetwork(object):
                     gradients[layer][row].append([])
                     gradients[layer][row][column] = errorFor(layer, row, column)
 
-        return np.array(gradients)
+        gradients = np.array([np.array(list) for list in gradients])
+        return gradients
 
     def applyGradients(self, gradients):
         printD()
@@ -244,44 +246,3 @@ class NeuralNetwork(object):
         maxIndex = list(predictedOutputs).index(maxValue)
 
         return self.classValues[maxIndex]
-
-
-def example1():
-    t = NeuralNetwork([1, 2, 1])
-
-    t.weights[0] = np.array([[0.4, 0.1], [0.3, 0.2]])
-    t.weights[1] = np.array([[0.7, 0.5, 0.6]])
-
-    instance1 = {'x': Attribute(0.13), 'y': Attribute(0.9)}
-    instance2 = {'x': Attribute(0.42), 'y': Attribute(0.23)}
-
-    delta = t.trainNumerically(0.0000010000, [instance1, instance2], 'y')
-    t.train([instance1, instance2], 'y')
-    print(t.regulatedGradients)
-    print()
-    print(delta)
-
-
-def example2():
-    t = NeuralNetwork([2, 4, 3, 2], regulation=0.25)
-
-    t.weights[0] = np.array([[0.42, 0.15, 0.40],
-                             [0.72, 0.10, 0.54],
-                             [0.01, 0.19, 0.42],
-                             [0.30, 0.35, 0.68]])
-
-    t.weights[1] = np.array([[0.21, 0.67, 0.14, 0.96, 0.87],
-                             [0.87, 0.42, 0.20, 0.32, 0.89],
-                             [0.03, 0.56, 0.80, 0.69, 0.09]])
-
-    t.weights[2] = np.array([[0.04, 0.87, 0.42, 0.53],
-                             [0.17, 0.10, 0.95, 0.69]])
-
-    instance1 = {'x1': Attribute(0.32), 'x2': Attribute(0.68), 'y': [Attribute(0.75), Attribute(0.98)]}
-    instance2 = {'x1': Attribute(0.83), 'x2': Attribute(0.02), 'y': [Attribute(0.75), Attribute(0.28)]}
-
-    t.train([instance1, instance2], 'y')
-
-
-if __name__ == '__main__':
-    example1()
