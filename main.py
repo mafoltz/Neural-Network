@@ -8,6 +8,7 @@ from datetime import datetime
 
 from validation import Attribute, CrossValidator, FoldSeparator, Measurer
 from neural import NeuralNetwork
+from neuralBatcher import NeuralNetworkBatcher
 
 
 TRAINING_MODE = 'training'
@@ -194,8 +195,11 @@ def createNeuralNetworkForVerificationFrom(filenames):
 def executeTraining(filenames):
     neuralNetwork, instances, className = createNeuralNetworkForTrainingFrom(filenames)
 
+    numOfBatches = 50
+    neuralNetworkBatches = NeuralNetworkBatcher(neuralNetwork, numOfBatches)
+
     # Apply cross validation and print results
-    validator = CrossValidator(10, neuralNetwork)
+    validator = CrossValidator(10, neuralNetworkBatches)
     acc, f1 = validator.validate(instances, className)
 
     print('f1:', f1.average, f1.std_dev)
