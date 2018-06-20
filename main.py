@@ -85,10 +85,6 @@ def readDatasetFile(filename):
         # Removes the header line and maps the values
         instances = [parseInstance(headers, values) for values in lists[1:]]
 
-        # Normalize instances
-        for field in headers:
-            instances = normalize(instances, field)
-
         # Join class attributes in one attribute
         className = 'class'
         for instance in instances:
@@ -147,6 +143,34 @@ def normalize(instances, field):
     return instances
 
 
+def printWeights(weights):
+    for i, thetas in enumerate(weights):
+        print('Theta {} initial weights:'.format(i))
+        for thetaWeights in thetas:
+            print('\t{}'.format(thetaWeights))
+        print()
+
+
+def printTrainingSet(instances):
+    print('Training set:')
+    for i, instance in enumerate(instances):
+        print('\tInstance {}:'.format(i))
+
+        inputs = []
+        outputs = []
+        for attribute in instance.keys():
+            attributeValue = instance[attribute]
+            if isinstance(attributeValue, Attribute):
+                inputs.append(attributeValue.value)
+            else:
+                for outputAttribute in attributeValue:
+                    outputs.append(outputAttribute.value)
+
+        print('\t\tx: {}'.format(inputs))
+        print('\t\ty: {}'.format(outputs))
+    print()
+
+
 def createNeuralNetworkForTrainingFrom(filenames):
     # Read input data
     networkFile = readNetworkFile(filenames[0])
@@ -155,7 +179,7 @@ def createNeuralNetworkForTrainingFrom(filenames):
 
     instances, className, classValues = readTrainingDatasetFile(filenames[1])
 
-    # Test input data
+    # Print input data
     print('Regulation: {}\n'.format(regulation))
     print('Configuration: {}\n'.format(configuration))
     print('Class name: {}\n'.format(className))
@@ -177,10 +201,11 @@ def createNeuralNetworkForVerificationFrom(filenames):
 
     instances, className = readDatasetFile(filenames[2])
 
-    # Test input data
+    # Print input data
     print('Regulation: {}\n'.format(regulation))
     print('Configuration: {}\n'.format(configuration))
-    print('Initial weights:\n{}\n'.format(weights))
+    printWeights(weights)
+    printTrainingSet(instances)
 
     # Initialize and train neural network
     print('Training neural network...\n')
