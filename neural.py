@@ -105,7 +105,8 @@ class NeuralNetwork(object):
         return gradients
 
     def error(self, outputs, expectedOutputs):
-        return sum([-y*log(fx) - (1-y)*log(1-fx) for fx, y in zip(outputs, expectedOutputs)])
+        logNeg = lambda x: log(1-x) if x != 1 else 0
+        return sum([-y*log(fx) - (1-y)*logNeg(fx) for fx, y in zip(outputs, expectedOutputs)])
 
     def networkInputsAndOutputsFrom(self, instances, className, attributes=None):
         if not attributes:
