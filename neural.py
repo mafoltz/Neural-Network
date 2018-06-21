@@ -213,6 +213,7 @@ class NeuralNetwork(object):
             for i, (input, output) in enumerate(zip(inputs, outputs)):
                 predictedOutput = self.propagate(input)
                 error += self.error(predictedOutput, output)
+            error = error / len(instances)
             error = self.regularizedCostFrom(instances, error)
             return error
 
