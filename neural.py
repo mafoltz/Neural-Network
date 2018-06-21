@@ -245,6 +245,16 @@ class NeuralNetwork(object):
             printD('new weight for layer {}: {}'.format(layer, layerValue))
             self.weights[layer] = layerValue
 
+    def gradientErrors(self, numericGradients, backpropagationGradients):
+        gradientErrorsArrays = abs(numericGradients - backpropagationGradients)
+        thetasGradientErrors = []
+
+        for thetaErrors in gradientErrorsArrays:
+            thetaGradientError = sum(sum(thetaErrors))
+            thetasGradientErrors.append(thetaGradientError)
+
+        return thetasGradientErrors
+
     def evaluate(self, test, className):
         inputs, outputs = self.networkInputsAndOutputsFrom([test], className)
 
